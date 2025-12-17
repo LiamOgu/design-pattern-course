@@ -1,25 +1,32 @@
+#include <cstddef>
 #include <iostream>
 #include <string>
 #include <vector>
 
 class Sql {
 public:
-  std::vector<std::string> select;
-  std::string from;
-  std::string where;
+  std::vector<std::string> colonnes;
+  std::string table;
+  std::vector<std::string> condition;
   int limit = 0;
 
   void afficherRequete() const {
     std::cout << "SELECT ";
-    for (size_t i = 0; i < select.size(); ++i) {
-      std::cout << select[i];
-      if (i + 1 < select.size())
+    for (size_t i = 0; i < colonnes.size(); ++i) {
+      std::cout << colonnes[i];
+      if (i + 1 < colonnes.size())
         std::cout << ", ";
     }
-    std::cout << " FROM " << from << std::endl;
+    std::cout << " FROM " << table << std::endl;
 
-    if (!where.empty()) {
-      std::cout << "WHERE " << where << std::endl;
+    if (!condition.empty()) {
+      for (size_t i = 0; i < condition.size(); i++) {
+        if (i == 0) {
+          std::cout << "WHERE " << condition[i] << std::endl;
+        } else {
+          std::cout << "AND " << condition[i] << std::endl;
+        }
+      }
     }
     if (limit > 0) {
       std::cout << "LIMIT " << limit << std::endl;
@@ -37,24 +44,24 @@ private:
 
 public:
   SqlBuilder(const std::string &fromTable) {
-    sql.from = fromTable;
-    sql.select = {"*"};
-    sql.where = "";
+    sql.table = fromTable;
+    sql.colonnes = {"*"};
+    sql.condition = {""};
     sql.limit = 0;
   }
 
   SqlBuilder &from(const std::string &fromQuery) {
-    sql.from = fromQuery;
+    sql.table = fromQuery;
     return *this;
   }
 
   SqlBuilder &select(const std::vector<std::string> &selectColumns) {
-    sql.select = selectColumns;
+    sql.colonnes = selectColumns;
     return *this;
   }
 
-  SqlBuilder &where(const std::string &whereCondition) {
-    sql.where = whereCondition;
+  SqlBuilder &where(const std::vector<std::string> &whereCondition) {
+    sql.condition = whereCondition;
     return *this;
   }
 
@@ -69,8 +76,16 @@ public:
 int main() {
   SqlBuilder builder("client");
 
-  Sql req1 =
-      builder.select({"nom", "email"}).where("actif = 1").limit(5).build();
+  SqlBuilder builder2("produit");
+
+  Sql req1 = builder.select({"nom", "email"})
+                 .where({"actif = 1", "age >= 18"})
+                 .limit(5)
+                 .build();
 
   req1.afficherRequete();
+
+  Sql req2 = builder2.from("commande").where({"montant > 100"}).build();
+
+  req2.afficherRequete();
 }
