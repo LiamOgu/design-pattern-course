@@ -20,10 +20,10 @@ protected:
 class PlatIndividuel : public IelementMenu {
 private:
   std::string name;
-  int price;
+  float price;
 
 public:
-  PlatIndividuel(const std::string &name, int price)
+  PlatIndividuel(const std::string &name, float price)
       : name(name), price(price) {};
 
   double getPrix() const override { return price; }
