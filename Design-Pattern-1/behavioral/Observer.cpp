@@ -1,76 +1,90 @@
+// Observer.cpp
+// Exemple du patron de conception Observer avec une station météo
+
+#include <algorithm> // Pour std::remove
 #include <iostream>
-#include <string>
 #include <vector>
 
-class Sql {
+// --- 1. L'INTERFACE OBSERVER ---
+// Tous ceux qui veulent écouter la station météo doivent implémenter ça.
+class IObserver {
 public:
-  std::vector<std::string> select;
-  std::string from;
-  std::string where;
-  int limit = 0;
-
-  void afficherRequete() const {
-    std::cout << "SELECT ";
-    for (size_t i = 0; i < select.size(); ++i) {
-      std::cout << select[i];
-      if (i + 1 < select.size())
-        std::cout << ", ";
-    }
-    std::cout << " FROM " << from << std::endl;
-
-    if (!where.empty()) {
-      std::cout << "WHERE " << where << std::endl;
-    }
-    if (limit > 0) {
-      std::cout << "LIMIT " << limit << std::endl;
-    }
-  }
+  virtual void update(float temperature) = 0;
+  virtual ~IObserver() = default;
 };
 
-class SqlBuilder {
+// --- 2. LE SUJET (La Station) ---
+class StationMeteo {
 private:
-  Sql sql;
-
-  SqlBuilder() = delete;
-  SqlBuilder(const SqlBuilder &) = delete;
-  void operator=(const SqlBuilder &) = delete;
+  float temperature;
+  // La liste de contacts (carnet d'adresses)
+  std::vector<IObserver *> observateurs;
 
 public:
-  SqlBuilder(const std::string &fromTable) {
-    sql.from = fromTable;
-    sql.select = {"*"};
-    sql.where = "";
-    sql.limit = 0;
+  // Méthode pour s'abonner (Subscribe)
+  void attach(IObserver *obs) { observateurs.push_back(obs); }
+
+  // Méthode pour se désabonner (Unsubscribe)
+  void detach(IObserver *obs) {
+    // Astuce C++ pour supprimer un élément d'un vecteur
+    observateurs.erase(
+        std::remove(observateurs.begin(), observateurs.end(), obs),
+        observateurs.end());
   }
 
-  SqlBuilder &from(const std::string &fromQuery) {
-    sql.from = fromQuery;
-    return *this;
+  // La méthode magique qui prévient tout le monde
+  void notify() {
+    for (IObserver *obs : observateurs) {
+      obs->update(temperature);
+    }
   }
 
-  SqlBuilder &select(const std::vector<std::string> &selectColumns) {
-    sql.select = selectColumns;
-    return *this;
+  // Méthode métier qui déclenche le processus
+  void setTemperature(float temp) {
+    std::cout << "\n--- La station mesure une nouvelle temperature : " << temp
+              << "C ---" << std::endl;
+    this->temperature = temp;
+    notify(); // Hop, on prévient tout le monde !
   }
-
-  SqlBuilder &where(const std::string &whereCondition) {
-    sql.where = whereCondition;
-    return *this;
-  }
-
-  SqlBuilder &limit(int limitNumber) {
-    sql.limit = limitNumber;
-    return *this;
-  }
-
-  Sql build() { return sql; }
 };
 
+// --- 3. LES OBSERVATEURS CONCRETS ---
+class EcranTelephone : public IObserver {
+public:
+  void update(float temperature) override {
+    std::cout << ">> Telephone : Nouvelle notif ! Il fait " << temperature
+              << " degres." << std::endl;
+  }
+};
+
+class EcranMur : public IObserver {
+public:
+  void update(float temperature) override {
+    std::cout << ">> Ecran Mur : Mise a jour affichage... [ " << temperature
+              << "C ]" << std::endl;
+  }
+};
+
+// --- 4. CODE CLIENT ---
 int main() {
-  SqlBuilder builder("client");
+  StationMeteo station;
 
-  Sql req1 =
-      builder.select({"nom", "email"}).where("actif = 1").limit(5).build();
+  EcranTelephone monTel;
+  EcranMur monMur;
 
-  req1.afficherRequete();
+  // 1. Inscription
+  station.attach(&monTel);
+  station.attach(&monMur);
+
+  // 2. Événement 1
+  station.setTemperature(25.5);
+
+  // 3. Désinscription dynamique
+  std::cout << "\n(Le telephone se deconnecte du reseau...)" << std::endl;
+  station.detach(&monTel);
+
+  // 4. Événement 2
+  station.setTemperature(26.0); // Seul le mur reçoit l'info
+
+  return 0;
 }
