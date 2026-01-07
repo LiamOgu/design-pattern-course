@@ -63,11 +63,22 @@ public:
 };
 
 int main() {
-  auto plat1 = std::make_shared<PlatIndividuel>(std::string("BigBurger"), 8.5);
-  auto plat2 =
+  auto big_burger =
+      std::make_shared<PlatIndividuel>(std::string("BigBurger"), 8.5);
+  auto petites_frites =
       std::make_shared<PlatIndividuel>(std::string("Petites Frites"), 2.5);
-  auto plat3 = std::make_shared<PlatIndividuel>(std::string("Soda"), 2);
-  auto plat4 = std::make_shared<PlatIndividuel>(std::string("Café"), 1.5);
+  auto soda = std::make_shared<PlatIndividuel>(std::string("Soda"), 2);
+  auto cafe = std::make_shared<PlatIndividuel>(std::string("Café"), 1.5);
+  auto menu_classique = std::make_shared<MenuCombo>(
+      std::string("Menu Classique"), std::vector<std::shared_ptr<IelementMenu>>{
+                                         big_burger, petites_frites, soda});
 
+  auto grosse_commande =
+      std::make_shared<MenuCombo>(std::string("Grosse Commande"),
+                                  std::vector<std::shared_ptr<IelementMenu>>{
+                                      menu_classique, cafe, petites_frites});
+
+  std::cout << "Affichage de la grosse commande :" << std::endl;
+  grosse_commande->afficher(0);
   return 0;
 }
