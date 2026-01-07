@@ -35,22 +35,22 @@ public:
 // --- 3. CONCRETE COMMANDS ---
 class CommandeSaut : public ICommand {
 private:
-  Robot &robot;
+  Robot &_robot;
 
 public:
-  CommandeSaut(Robot &r) : robot(r) {};
-  void execute() const override { robot.sauter(); }
-  void undo() const override { robot.atterrir(); }
+  CommandeSaut(Robot &r) : _robot(r) {};
+  void execute() const override { _robot.sauter(); }
+  void undo() const override { _robot.atterrir(); }
 };
 
 class CommandeTir : public ICommand {
 private:
-  Robot &robot;
+  Robot &_robot;
 
 public:
-  CommandeTir(Robot &r) : robot(r) {};
-  void execute() const override { robot.tirerLaser(); }
-  void undo() const override { robot.absorberLaser(); }
+  CommandeTir(Robot &r) : _robot(r) {};
+  void execute() const override { _robot.tirerLaser(); }
+  void undo() const override { _robot.absorberLaser(); }
 };
 
 // --- 4. INVOKER ---
